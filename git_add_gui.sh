@@ -53,7 +53,7 @@ do
     # Save the index version and quit when done
     $DIFF_TOOL $WORK_TREE_VERSION $INDEX_VERSION
 
-    # swap files around to run git add
+    # Swap files around to run git add
     mv $FILE $WORK_TREE_VERSION
     mv $INDEX_VERSION $FILE
     git add $FILE
@@ -64,5 +64,6 @@ do
     # git diff --no-index -- $FILE $INDEX_VERSION | git apply --cached
 done
 
+# Remove the temporary directory
 rm -rf $TMPDIR
 
