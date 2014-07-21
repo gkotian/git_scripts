@@ -7,10 +7,11 @@ if [ $RC != "0" ]; then
     exit $RC
 fi
 
-# Check if a diff tool has been configured in git config
+# Get a diff tool to be used
+# First check if a diff tool has been configured in git config, if not get it
+# manually.
 DIFF_TOOL=$(git config diff.tool)
 
-# Get a diff tool to be used
 if [ -z $DIFF_TOOL ]; then
     echo -n "No diff tool specified in git config, enter tool to use: "
     read DIFF_TOOL
