@@ -1,5 +1,27 @@
 #!/bin/bash
 
+################################################################################
+#
+#   Description:
+#   ------------
+#   Script to review a git branch by comparing the changes made in each commit
+#   of the branch, starting with the oldest commit. The base (commit from which
+#   the branch under review has been created) is assumed to be
+#   'upstream/master'.
+#
+#   Usage:
+#   ------
+#       (first make sure that the script is executable)
+#       $> /path/to/review_branch.sh branch_name
+#   If a graphical diff tool has been configured in gitconfig, then that will be
+#   launched (for each file changed in each commit), or else simple 'git diff'
+#   will be done as a fallback.
+#   The user will have to give manual confirmation before beginning the diff of
+#   a new commit, for clear distinction between changes made in separate
+#   commits.
+#
+################################################################################
+
 # TODO: provide help text
 
 # TODO: use getopt to parse input arguments
