@@ -1,5 +1,27 @@
 #!/bin/bash
 
+################################################################################
+#
+#   Description:
+#   ------------
+#   Script to graphically add modified files to the staging area. This is
+#   helpful when one needs to add only some of the changes in the modified files
+#   (and not all the changes). The usual way to do this is using:
+#       $> git add -p
+#   However doing this via the command line can be not only time consuming but
+#   also sometimes error-prone. Using a graphical tool (personally I prefer
+#   meld) makes the whole process a lot easier.
+#
+#   Usage:
+#   ------
+#       (first make sure that the script is executable)
+#       $> /path/to/git_add_gui.sh
+#   The graphical diff tool of your choice will be launched, with the modified
+#   files on the left pane. Bring in the changes you want to stage to the right
+#   pane, save and exit.
+#
+################################################################################
+
 # Confirm that we are in a git repository
 GIT_TOP=$(git rev-parse --show-toplevel)
 RC=$?
