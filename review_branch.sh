@@ -22,15 +22,6 @@
 #
 ################################################################################
 
-# TODO: provide help text
-
-# TODO: use getopt to parse input arguments
-
-# TODO: confirm valid branch
-
-# TODO: take a base as optional second argument
-#       if nothing is given, assume base as upstream/master
-
 # Confirm minimum number of arguments
 if [ $# -lt 1 ]; then
     echo "No branch given"
