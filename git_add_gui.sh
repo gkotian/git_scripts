@@ -29,6 +29,13 @@ if [ $RC != "0" ]; then
     exit $RC
 fi
 
+# Check if there are any modified files
+NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
+if [ $NUM_MODIFIED_FILES == "0" ]; then
+    echo "There are no modified files. Aborting."
+    exit 1
+fi
+
 # Get a diff tool to be used
 # First check if a diff tool has been configured in git config, if not get it
 # manually.
