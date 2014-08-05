@@ -22,6 +22,8 @@
 #
 ################################################################################
 
+DEFAULT_BASE="upstream/master"
+
 # Confirm minimum number of arguments
 if [ $# -lt 1 ]; then
     echo "No branch given"
@@ -52,7 +54,7 @@ else
     fi
 fi
 
-BASE="upstream/master"
+BASE=$DEFAULT_BASE
 
 COMMITS_LIST=(`git log --oneline $BASE..$1 | cut -d" " -f1`)
 
