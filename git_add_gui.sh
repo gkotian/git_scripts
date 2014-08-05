@@ -15,7 +15,7 @@
 #   Usage:
 #   ------
 #       (first make sure that the script is executable)
-#       $> /path/to/git_add_gui.sh
+#       $> /path/to/git_add_gui.sh [file1, file2, ...]
 #   The graphical diff tool of your choice will be launched, with the modified
 #   files on the left pane. Bring in the changes you want to stage to the right
 #   pane, save and exit.
@@ -34,6 +34,14 @@ NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
 if [ $NUM_MODIFIED_FILES == "0" ]; then
     echo "There are no modified files. Aborting."
     exit 1
+fi
+
+# Get the list of files to work upon. All modified files if no files were
+# explicitly given on the command line.
+if [ $# -eq 0 ]; then
+    FILES_LIST=(`git diff --name-only`)
+else
+    FILES_LIST=("$@")
 fi
 
 # Get a diff tool to be used
@@ -62,10 +70,10 @@ fi
 # Create a temporary directory
 TMPDIR=$(mktemp -d)
 
-# For each modified file
-git diff --name-only | while read FILE;
+# For each file in the files list
+for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
-    FILE=$GIT_TOP/$FILE
+    FILE=$GIT_TOP/${FILES_LIST[$i]}
 
     cp $FILE $TMPDIR
 
