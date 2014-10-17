@@ -24,9 +24,19 @@
 
 DEFAULT_BASE="upstream/master"
 
-# Confirm minimum number of arguments
-if [ $# -lt 1 ]; then
-    echo "No branch given"
+# Get the branch name
+if [ $# -eq 0 ]; then
+    # Use the current branch if possible
+    BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+    if [ $? != "0" ]; then
+        echo "Cannot determine branch to review. Aborting."
+        exit 1
+    fi
+elif [ $# -eq 1 ]; then
+    BRANCH_NAME=$1
+    # TODO: validate given branch name
+else
+    echo "Too many arguments. Aborting."
     exit 1
 fi
 
@@ -56,9 +66,9 @@ fi
 
 BASE=$DEFAULT_BASE
 
-COMMITS_LIST=(`git log --oneline $BASE..$1 | cut -d" " -f1`)
+COMMITS_LIST=(`git log --oneline $BASE..$BRANCH_NAME | cut -d" " -f1`)
 
-echo "Found ${#COMMITS_LIST[@]} commits in branch $1"
+echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
 
 for (( i=${#COMMITS_LIST[@]}-1, n=1; i>=0; --i, ++n ))
 do
