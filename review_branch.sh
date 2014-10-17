@@ -72,8 +72,14 @@ echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
 
 for (( i=${#COMMITS_LIST[@]}-1, n=1; i>=0; --i, ++n ))
 do
-    echo -n "    Press enter to diff commit $n (${COMMITS_LIST[$i]})"
+    COMMIT_ID_STR=$(git log --format="(%h) %s" -n1 ${COMMITS_LIST[$i]})
+    echo -n "    $n. $COMMIT_ID_STR ... Press enter to diff"
     read dummy
     $GD ${COMMITS_LIST[$i]}~1 ${COMMITS_LIST[$i]}
+
+    # Show the commit details without the "Press enter to diff" part
+    echo -e "\e[2A" # Go up two lines
+    echo -en "\e[0K" # Clear the line
+    echo "    $n. $COMMIT_ID_STR"
 done
 
