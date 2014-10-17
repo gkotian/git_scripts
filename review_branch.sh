@@ -24,6 +24,13 @@
 
 DEFAULT_BASE="upstream/master"
 
+# Confirm that we are in a git repository
+GIT_TOP=$(git rev-parse --show-toplevel)
+RC=$?
+if [ $RC != "0" ]; then
+    exit $RC
+fi
+
 # Get the branch name
 if [ $# -eq 0 ]; then
     # Use the current branch if possible
@@ -38,13 +45,6 @@ elif [ $# -eq 1 ]; then
 else
     echo "Too many arguments. Aborting."
     exit 1
-fi
-
-# Confirm that we are in a git repository
-GIT_TOP=$(git rev-parse --show-toplevel)
-RC=$?
-if [ $RC != "0" ]; then
-    exit $RC
 fi
 
 # If a diff tool has been configured, then use that; otherwise just do a simple
