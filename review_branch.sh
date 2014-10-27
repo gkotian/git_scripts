@@ -73,12 +73,31 @@ echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
 for (( i=${#COMMITS_LIST[@]}-1, n=1; i>=0; --i, ++n ))
 do
     COMMIT_ID_STR=$(git log --format="(%h) %s" -n1 ${COMMITS_LIST[$i]})
-    echo -n "    $n. $COMMIT_ID_STR ... Press enter to diff"
-    read dummy
-    $GD ${COMMITS_LIST[$i]}~1 ${COMMITS_LIST[$i]}
+    echo -n "    $n. $COMMIT_ID_STR ... Press 'r' to review, 's' to skip"
 
-    # Show the commit details without the "Press enter to diff" part
-    echo -e "\e[2A" # Go up two lines
+    # Silently read a single character
+    read -s -n 1 C
+
+    # Treat 'Enter' as 'r'
+    if [ -z $C ]; then
+        C='r'
+    fi
+
+    while [ $C != 'r' ] && [ $C != 'R' ] && [ $C != 's' ] && [ $C != 'S' ];
+    do
+        read -s -n 1 C
+
+        if [ -z $C ]; then
+            C='r'
+        fi
+    done
+
+    if [ $C == 'r' ] || [ $C == 'R' ]; then
+        $GD ${COMMITS_LIST[$i]}~1 ${COMMITS_LIST[$i]}
+    fi
+
+    # Show the commit details without the "Press 'r' to review..." part
+    echo -e "\e[1A" # Go up one line
     echo -en "\e[0K" # Clear the line
     echo "    $n. $COMMIT_ID_STR"
 done
