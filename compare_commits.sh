@@ -40,17 +40,23 @@ if [ ${#COMMIT1_FILES[@]} -ne ${#COMMIT2_FILES[@]} ]; then
     echo -n "Show the list of modified files for both commits? (y/n): "
     read YES_OR_NO
     if [ $YES_OR_NO == "y" ] || [ $YES_OR_NO == "Y" ]; then
+        echo ""
         echo "Commit $COMMIT1 modifies the following ${#COMMIT1_FILES[@]} files:"
         for (( i=0; i<${#COMMIT1_FILES[@]}; ++i ))
         do
             echo "    ${COMMIT1_FILES[$i]}"
         done
+
         echo ""
         echo "Commit $COMMIT2 modifies the following ${#COMMIT2_FILES[@]} files:"
         for (( i=0; i<${#COMMIT2_FILES[@]}; ++i ))
         do
             echo "    ${COMMIT2_FILES[$i]}"
         done
+
+        echo ""
+        echo "Use this to diff individual files:"
+        echo "    F=<file>; git difftool --no-prompt $COMMIT1:\$F $COMMIT2:\$F"
     fi
 
     exit 2
