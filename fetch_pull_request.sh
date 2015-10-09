@@ -34,17 +34,21 @@ if [ $# -eq 0 ]; then
 
     # Get the PR number from the branch name
     PR_NUM=${BRANCH_NAME:2}
-
-    # TODO: confirm PR exists
 elif [ $# -eq 1 ]; then
     PR_NUM=$1
-
-    # TODO: confirm PR exists
 
     BRANCH_NAME=pr$PR_NUM
 else
     echo "Too many arguments. Aborting."
     exit 4
+fi
+
+# Confirm that the PR exists
+git ls-remote upstream | grep "pull/$PR_NUM/head" > /dev/null
+RC=$?
+if [ $RC != "0" ]; then
+    echo "PR #$PR_NUM not found. Aborting."
+    exit $RC
 fi
 
 git remote update -p
