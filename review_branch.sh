@@ -76,7 +76,8 @@ do
     COMMIT_MSG_SUBJECT=$(git log --format="%s" -n1 ${COMMITS_LIST[$i]})
     COMMIT_MSG_BODY=$(git log --format="%b" -n1 ${COMMITS_LIST[$i]})
 
-    echo "    $n. ($COMMIT_SHORT_HASH) $COMMIT_MSG_SUBJECT"
+    # echo -e "    $n. \e[1m$COMMIT_HASH_AND_SUBJECT\e[0m"
+    echo -e "    $n. (\e[34m$COMMIT_SHORT_HASH\e[0m) \e[1m$COMMIT_MSG_SUBJECT\e[0m"
 
     if [ -n "$COMMIT_MSG_BODY" ]; then
         # Split the commit message body into individual lines and print each
@@ -95,7 +96,7 @@ do
         done
     fi
 
-    echo -n "                                            ... Press 'r' to review, 's' to skip"
+    echo -ne "                                            \e[35m... Press 'r' to review, 's' to skip\e[0m"
 
     # Silently read a single character
     read -s -n 1 C
