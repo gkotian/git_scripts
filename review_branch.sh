@@ -79,18 +79,18 @@ do
     echo "    $n. ($COMMIT_SHORT_HASH) $COMMIT_MSG_SUBJECT"
 
     if [ -n "$COMMIT_MSG_BODY" ]; then
-        # Split the commit body into individual lines and print each separately.
-        # This is needed so that we can indent each line of the commit body
-        # equally.
-        mapfile -t COMMIT_BODY_LINES <<< "$COMMIT_MSG_BODY"
+        # Split the commit message body into individual lines and print each
+        # separately. This is needed so that we can indent each line of the
+        # commit messsage body equally.
+        mapfile -t COMMIT_MSG_BODY_LINES <<< "$COMMIT_MSG_BODY"
 
-        for (( j=0; j<${#COMMIT_BODY_LINES[@]}; ++j ))
+        for (( j=0; j<${#COMMIT_MSG_BODY_LINES[@]}; ++j ))
         do
-            if [ -z "${COMMIT_BODY_LINES[$j]}" ]; then
+            if [ -z "${COMMIT_MSG_BODY_LINES[$j]}" ]; then
                 # There's no need to indent blank lines
                 echo ""
             else
-                echo "            ${COMMIT_BODY_LINES[$j]}"
+                echo "            ${COMMIT_MSG_BODY_LINES[$j]}"
             fi
         done
     fi
