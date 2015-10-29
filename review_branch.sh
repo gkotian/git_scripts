@@ -72,8 +72,36 @@ echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
 
 for (( i=${#COMMITS_LIST[@]}-1, n=1; i>=0; --i, ++n ))
 do
-    COMMIT_ID_STR=$(git log --format="(%h) %s" -n1 ${COMMITS_LIST[$i]})
-    echo -n "    $n. $COMMIT_ID_STR ... Press 'r' to review, 's' to skip"
+    COMMIT_HASH_AND_SUBJECT=$(git log --format="(%h) %s" -n1 ${COMMITS_LIST[$i]})
+    COMMIT_BODY=$(git log --format="%b" -n1 ${COMMITS_LIST[$i]})
+
+    echo "    $n. $COMMIT_HASH_AND_SUBJECT"
+
+    if [ -n "$COMMIT_BODY" ]; then
+        # Split the commit body into individual lines and print each separately.
+        # This is needed so that we can indent each line of the commit body
+        # equally.
+
+        # Alternate way of splitting the commit body into individual lines
+        # (needed if bash version is less than 4, as there's no mapfile)
+        # COMMIT_BODY_LINES=()
+        # while read -r line; do
+        #     COMMIT_BODY_LINES+=("$line")
+        # done <<< "$COMMIT_BODY"
+        mapfile -t COMMIT_BODY_LINES <<< "$COMMIT_BODY"
+
+        for (( j=0; j<${#COMMIT_BODY_LINES[@]}; ++j ))
+        do
+            if [ -z "${COMMIT_BODY_LINES[$j]}" ]; then
+                # There's no need to indent blank lines
+                echo ""
+            else
+                echo "            ${COMMIT_BODY_LINES[$j]}"
+            fi
+        done
+    fi
+
+    echo -n "                                            ... Press 'r' to review, 's' to skip"
 
     # Silently read a single character
     read -s -n 1 C
@@ -96,9 +124,8 @@ do
         $GD ${COMMITS_LIST[$i]}~1 ${COMMITS_LIST[$i]}
     fi
 
-    # Show the commit details without the "Press 'r' to review..." part
+    # Remove the "Press 'r' to review..." line
     echo -e "\e[1A" # Go up one line
     echo -en "\e[0K" # Clear the line
-    echo "    $n. $COMMIT_ID_STR"
 done
 
