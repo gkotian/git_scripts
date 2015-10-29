@@ -81,13 +81,6 @@ do
         # Split the commit body into individual lines and print each separately.
         # This is needed so that we can indent each line of the commit body
         # equally.
-
-        # Alternate way of splitting the commit body into individual lines
-        # (needed if bash version is less than 4, as there's no mapfile)
-        # COMMIT_BODY_LINES=()
-        # while read -r line; do
-        #     COMMIT_BODY_LINES+=("$line")
-        # done <<< "$COMMIT_BODY"
         mapfile -t COMMIT_BODY_LINES <<< "$COMMIT_BODY"
 
         for (( j=0; j<${#COMMIT_BODY_LINES[@]}; ++j ))
