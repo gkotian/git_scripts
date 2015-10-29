@@ -72,16 +72,17 @@ echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
 
 for (( i=${#COMMITS_LIST[@]}-1, n=1; i>=0; --i, ++n ))
 do
-    COMMIT_HASH_AND_SUBJECT=$(git log --format="(%h) %s" -n1 ${COMMITS_LIST[$i]})
-    COMMIT_BODY=$(git log --format="%b" -n1 ${COMMITS_LIST[$i]})
+    COMMIT_SHORT_HASH=$(git log --format="%h" -n1 ${COMMITS_LIST[$i]})
+    COMMIT_MSG_SUBJECT=$(git log --format="%s" -n1 ${COMMITS_LIST[$i]})
+    COMMIT_MSG_BODY=$(git log --format="%b" -n1 ${COMMITS_LIST[$i]})
 
-    echo "    $n. $COMMIT_HASH_AND_SUBJECT"
+    echo "    $n. ($COMMIT_SHORT_HASH) $COMMIT_MSG_SUBJECT"
 
-    if [ -n "$COMMIT_BODY" ]; then
+    if [ -n "$COMMIT_MSG_BODY" ]; then
         # Split the commit body into individual lines and print each separately.
         # This is needed so that we can indent each line of the commit body
         # equally.
-        mapfile -t COMMIT_BODY_LINES <<< "$COMMIT_BODY"
+        mapfile -t COMMIT_BODY_LINES <<< "$COMMIT_MSG_BODY"
 
         for (( j=0; j<${#COMMIT_BODY_LINES[@]}; ++j ))
         do
