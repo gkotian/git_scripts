@@ -26,24 +26,20 @@ if [ $RC != "0" ]; then
     exit $RC
 fi
 
-for COMMIT in "$@"
+COMMIT=$1
+
+git rev-parse --quiet --verify $COMMIT > /dev/null
+if [ $? != "0" ]; then
+    echo "$COMMIT is not a valid git object"
+    exit 1
+fi
+
+FILES_LIST=(`git diff-tree --no-commit-id --name-only -r $COMMIT`)
+
+echo "Commit $COMMIT modifies the following ${#FILES_LIST[@]} files:"
+for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
-    git rev-parse --quiet --verify $COMMIT > /dev/null
-    if [ $? != "0" ]; then
-        echo "$COMMIT is not a valid git object"
-        echo ""
-        continue
-    fi
-
-    FILES_LIST=(`git diff-tree --no-commit-id --name-only -r $COMMIT`)
-
-    echo "Commit $COMMIT modifies the following ${#FILES_LIST[@]} files:"
-    for (( i=0; i<${#FILES_LIST[@]}; ++i ))
-    do
-        echo "    ${FILES_LIST[$i]}"
-    done
-
-    echo ""
+    echo "    ${FILES_LIST[$i]}"
 done
 
 exit 0
