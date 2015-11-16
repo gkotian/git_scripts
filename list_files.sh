@@ -28,7 +28,12 @@ fi
 
 for COMMIT in "$@"
 do
-    #TODO: validate given commit
+    git rev-parse --quiet --verify $COMMIT > /dev/null
+    if [ $? != "0" ]; then
+        echo "$COMMIT is not a valid git object"
+        echo ""
+        continue
+    fi
 
     FILES_LIST=(`git diff-tree --no-commit-id --name-only -r $COMMIT`)
 
