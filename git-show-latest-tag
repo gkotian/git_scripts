@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Based on http://stackoverflow.com/a/18692754/793930
+git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -1
