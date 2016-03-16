@@ -1,0 +1,86 @@
+#!/usr/bin/zsh
+
+################################################################################
+#
+#   Description:
+#   ------------
+#   TODO
+#
+#   Usage:
+#   ------
+#   TODO
+#
+################################################################################
+
+appendSpaces()
+{
+    INITIAL_STR=$1
+    TARGET_LENGTH=$2
+
+    SPACES_TO_APPEND=$((TARGET_LENGTH - ${#INITIAL_STR}))
+
+    echo -n $INITIAL_STR
+    for ((i = 0; i < $SPACES_TO_APPEND; i++))
+    do
+        echo -n " "
+    done
+    echo ""
+}
+
+# Confirm that we are in a git repository
+GIT_TOP=$(git rev-parse --show-toplevel)
+RC=$?
+if [ $RC != "0" ]; then
+    exit $RC
+fi
+
+# Make sure there are no modified files (just erring on the side of caution)
+NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
+if [ $NUM_MODIFIED_FILES -ne 0 ]; then
+    echo "Modified files detected. Aborting."
+    exit 1
+fi
+
+git submodule foreach git remote update -p
+echo ""
+
+# Read the existing submodules information into an array. After this, the array
+# should contain an even number of entries, with each pair of entries containing
+# the submodule name and the current submodule version respectively.
+ARR=(`git submodule | sed 's|^.*submodules/\(.*\) (\(.*\))$|\1 \2|g'`)
+
+# Get the length of the longest submodule name
+# Arrays indices in zsh start from 1
+MAX_LEN=9 # Initialize to length of the header string "Submodule"
+for ((i = 1; i < ${#ARR[@]}; i+=2))
+do
+    CUR_LEN=${#ARR[$i]}
+
+    if [ $CUR_LEN -gt $MAX_LEN ]
+    then
+        MAX_LEN=$CUR_LEN
+    fi
+done
+
+FIRST_COLUMN_WIDTH=$((MAX_LEN+4))
+
+# For now, the width of the second column can be hard-coded to 19
+# i.e. length of "Current version" + 4
+SECOND_COLUMN_WIDTH=19
+
+# Write the header row and its underlines
+echo "$(appendSpaces "Submodule" $FIRST_COLUMN_WIDTH) Current version     Latest version"
+echo "---------     ---------------     --------------"
+
+# Write each submodule's data
+for ((i = 1; i < ${#ARR[@]}; i+=2))
+do
+    cd submodules/${ARR[$i]}
+
+    # LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+    LATEST_TAG=$(git tag --list "v*" --sort=v:refname | tail -1)
+
+    cd -
+
+    echo "$(appendSpaces ${ARR[$i]} $FIRST_COLUMN_WIDTH) $(appendSpaces ${ARR[$i+1]} $SECOND_COLUMN_WIDTH) $LATEST_TAG"
+done
