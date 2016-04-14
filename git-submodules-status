@@ -4,11 +4,14 @@
 #
 #   Description:
 #   ------------
-#   TODO
+#       Fetches all submodules from their respective remote repositories, and
+#       shows a table listing both the current version of each submodule and the
+#       latest available version.
 #
 #   Usage:
 #   ------
-#   TODO
+#       $> cd path/to/repo
+#       $> git submodules-status
 #
 ################################################################################
 
