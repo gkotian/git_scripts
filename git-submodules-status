@@ -5,8 +5,9 @@
 #   Description:
 #   ------------
 #       Fetches all submodules from their respective remote repositories, and
-#       shows a table listing both the current version of each submodule and the
-#       latest available version.
+#       shows a table that lists for each submodule : the latest available
+#       version, the current version and a small visual cue to easily identify
+#       mismatches between the two.
 #
 #   Usage:
 #   ------
@@ -71,6 +72,12 @@ FIRST_COLUMN_WIDTH=$((MAX_LEN+4))
 # i.e. length of the string "Current version" + 4
 SECOND_COLUMN_WIDTH=19
 
+# Also, the width of the third column is hard-coded to 12
+# i.e. length of the string "Latest version" - 2
+# so that the '✗' which indicates a difference between the two versions can
+# appear as the last character of the "Latest version" column
+THIRD_COLUMN_WIDTH=12
+
 # Write the header row and its underlines
 echo "$(appendSpaces "Submodule" $FIRST_COLUMN_WIDTH) Current version     Latest version"
 echo "---------     ---------------     --------------"
@@ -85,5 +92,7 @@ do
 
     cd -
 
-    echo "$(appendSpaces ${ARR[$i]} $FIRST_COLUMN_WIDTH) $(appendSpaces ${ARR[$i+1]} $SECOND_COLUMN_WIDTH) $LATEST_TAG"
+    MISMATCH_CHARACTER=$([ "${ARR[$i+1]}" = "$LATEST_TAG" ] && echo " " || echo "✗")
+
+    echo "$(appendSpaces ${ARR[$i]} $FIRST_COLUMN_WIDTH) $(appendSpaces ${ARR[$i+1]} $SECOND_COLUMN_WIDTH) $(appendSpaces $LATEST_TAG $THIRD_COLUMN_WIDTH) $MISMATCH_CHARACTER"
 done
