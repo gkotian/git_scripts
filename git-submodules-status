@@ -67,8 +67,8 @@ done
 
 FIRST_COLUMN_WIDTH=$((MAX_LEN+4))
 
-# For now, the width of the second column can be hard-coded to 19
-# i.e. length of "Current version" + 4
+# For now, the width of the second column is hard-coded to 19
+# i.e. length of the string "Current version" + 4
 SECOND_COLUMN_WIDTH=19
 
 # Write the header row and its underlines
