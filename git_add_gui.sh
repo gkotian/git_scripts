@@ -73,17 +73,21 @@ TMPDIR=$(mktemp -d)
 # For each file in the files list
 for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
-    FILE=$GIT_TOP/${FILES_LIST[$i]}
+    FILE_FULL_PATH=$(readlink -m ${FILES_LIST[$i]})
 
-    cp $FILE $TMPDIR
+    cp $FILE_FULL_PATH $TMPDIR
 
-    FILENAME=$(basename $FILE)
+    FILENAME=$(basename $FILE_FULL_PATH)
 
     # This has your changes in it
     WORK_TREE_VERSION=$TMPDIR/$FILENAME
 
-    # This has the pristine version
-    TEMP_FILE=$(git checkout-index --temp $FILE | cut -f1)
+    # The following command will create a file called '.merge_file_xxxxxx'
+    # containing the pristine version before any modifications. This file will
+    # be created in the top git directory (even if the command is run from deep
+    # inside the git hierarchy). The 'xxxxxx' part in the file name is a random
+    # string of alphanumeric characters.
+    TEMP_FILE=$(git checkout-index --temp $FILE_FULL_PATH | cut -f1)
     INDEX_VERSION=$GIT_TOP/$TEMP_FILE
 
     # Launch the difftool to compare the work tree version and the index version
@@ -91,17 +95,23 @@ do
     # Save the index version and quit when done
     $DIFF_TOOL $WORK_TREE_VERSION $INDEX_VERSION
 
-    # Swap files around to run git add
-    mv $FILE $WORK_TREE_VERSION
-    mv $INDEX_VERSION $FILE
-    git add $FILE
-    mv $WORK_TREE_VERSION $FILE
+    # Temporarily save the file containing all modified changes
+    mv $FILE_FULL_PATH $WORK_TREE_VERSION
 
-    # Instead of swapping this way, we could also calculate the diff and apply
-    # it directly to the index as follows, but I haven't tested this.
+    # Put the file containing only the changes to be staged into its rightful
+    # location, so that we can run 'git add' on it
+    mv $INDEX_VERSION $FILE_FULL_PATH
+    git add $FILE_FULL_PATH
+
+    # Restore the temporarily saved file, so that the unstaged changes are not
+    # lost
+    mv $WORK_TREE_VERSION $FILE_FULL_PATH
+
+    # Instead of swapping files in the above few commands, we could also
+    # calculate the diff and apply it directly to the index as follows, but I
+    # haven't tested this.
     # git diff --no-index -- $FILE $INDEX_VERSION | git apply --cached
 done
 
 # Remove the temporary directory
 rm -rf $TMPDIR
-
