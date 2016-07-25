@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# TODO: a lot of the code here is similar to the code in review_branch.sh. Is it
+# possible to somehow combine these scripts?
+
+BASE="upstream/master"
+MAKE_COMMAND="make -B test"
+
+if [ $# -ne 0 ]; then
+    echo "Too many arguments. Aborting."
+    exit 1
+fi
+
+# Confirm that we are in a git repository
+GIT_TOP=$(git rev-parse --show-toplevel)
+RC=$?
+if [ $RC != "0" ]; then
+    exit $RC
+fi
+
+# Get the branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ $? != "0" ]; then
+    echo "Cannot determine branch. Aborting."
+    exit 1
+fi
+
+# Make sure there are no modified files
+NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
+if [ $NUM_MODIFIED_FILES != "0" ]; then
+    echo "Modified files detected. Aborting."
+    exit 1
+fi
+
+COMMITS_LIST=(`git log --oneline $BASE..$BRANCH_NAME | cut -d" " -f1`)
+
+echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
+
+for (( i=${#COMMITS_LIST[@]}-1; i>=0; --i ))
+do
+    echo "Working on commit ${COMMITS_LIST[$i]}"
+
+    git co ${COMMITS_LIST[$i]} >/dev/null 2>&1
+
+    git submodule update >/dev/null
+
+    echo -n "    ... build in progress, please wait"
+    ${MAKE_COMMAND} >/dev/null 2>&1
+    if [ $? == "0" ]; then
+        echo -e "\e[1K\r    ... successful"
+    else
+        echo -e "\e[1K\r    ... failed, aborting"
+        exit 2
+    fi
+done
+
+echo ""
+echo "Congratulations! All tests passed!"
+echo ""
+
+git co $BRANCH_NAME >/dev/null 2>&1
+git submodule update >/dev/null
