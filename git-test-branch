@@ -6,11 +6,6 @@
 BASE="upstream/master"
 MAKE_COMMAND="make -B test"
 
-if [ $# -ne 0 ]; then
-    echo "Too many arguments. Aborting."
-    exit 1
-fi
-
 # Confirm that we are in a git repository
 GIT_TOP=$(git rev-parse --show-toplevel)
 RC=$?
@@ -18,7 +13,29 @@ if [ $RC != "0" ]; then
     exit $RC
 fi
 
-# Get the branch name
+# Check if a custom base has been given
+if [ $# -ne 0 ]; then
+    if [ $# -ne 2 ]; then
+        echo "Incorrect number of arguments. Aborting."
+        exit 1
+    else
+        if [ "$1" != "--base" ]; then
+            echo "Incorrect first argument. Aborting."
+            exit 1
+        else
+            BASE="$2"
+        fi
+    fi
+fi
+
+# Check if the base is valid
+git rev-parse --quiet --verify ${BASE} >/dev/null
+if [ $? != "0" ]; then
+    echo "'${BASE}' is not a valid base. Aborting."
+    exit 1
+fi
+
+# Get the current branch name
 BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
 if [ $? != "0" ]; then
     echo "Cannot determine branch. Aborting."
@@ -27,14 +44,14 @@ fi
 
 # Make sure there are no modified files
 NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
-if [ $NUM_MODIFIED_FILES != "0" ]; then
+if [ ${NUM_MODIFIED_FILES} != "0" ]; then
     echo "Modified files detected. Aborting."
     exit 1
 fi
 
-COMMITS_LIST=(`git log --oneline $BASE..$BRANCH_NAME | cut -d" " -f1`)
+COMMITS_LIST=(`git log --oneline ${BASE}..${BRANCH_NAME} | cut -d" " -f1`)
 
-echo "Found ${#COMMITS_LIST[@]} commits in branch $BRANCH_NAME"
+echo "Found ${#COMMITS_LIST[@]} commits in branch ${BRANCH_NAME}"
 
 for (( i=${#COMMITS_LIST[@]}-1; i>=0; --i ))
 do
@@ -58,5 +75,5 @@ echo ""
 echo "Congratulations! All tests passed!"
 echo ""
 
-git co $BRANCH_NAME >/dev/null 2>&1
+git co ${BRANCH_NAME} >/dev/null 2>&1
 git submodule update >/dev/null
