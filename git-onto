@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [ $# -ne 0 ]; then
+    echo "Too many arguments. Aborting."
+    exit 1
+fi
+
+# Confirm that we are in a git repository
+GIT_TOP=$(git rev-parse --show-toplevel)
+RC=$?
+if [ $RC != "0" ]; then
+    exit $RC
+fi
+
+# Make sure there are no modified files
+NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
+if [ $NUM_MODIFIED_FILES != "0" ]; then
+    echo "Modified files detected. Aborting."
+    exit 1
+fi
+
+echo -n "Onto where: "
+read COMMIT_TARGET
+
+echo -n "Branch to move: "
+read BRANCH_SRC_TOP
+
+# Validate the given branch
+COMMIT_SRC_TOP=$(git rev-parse --quiet --short --verify ${BRANCH_SRC_TOP})
+if [ $? != "0" ]; then
+    echo "Branch '${BRANCH_SRC_TOP}' not found. Aborting."
+    exit 1
+fi
+
+echo -n "Starting commit (which should *not* be onto'ed): "
+read COMMIT_SRC_BOTTOM
+
+git rebase --onto ${COMMIT_TARGET} ${COMMIT_SRC_BOTTOM} ${BRANCH_SRC_TOP}
+
+echo "Branch '${BRANCH_SRC_TOP}' moved (was earlier at '${COMMIT_SRC_TOP}')"
