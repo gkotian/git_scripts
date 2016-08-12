@@ -1,0 +1,59 @@
+#!/bin/bash
+
+################################################################################
+#
+#   Description:
+#   ------------
+#   Creates file-specific patches of a commit
+#
+#   Usage:
+#   ------
+#       $> git patches COMMIT
+#
+################################################################################
+
+# Confirm that we are in a git repository
+GIT_TOP=$(git rev-parse --show-toplevel)
+RC=$?
+if [ $RC != "0" ]; then
+    exit $RC
+fi
+
+# Confirm correct number of arguments
+if [ $# -ne 1 ]; then
+    echo "Only a single argument (the commit hash) is allowed"
+    exit 1
+fi
+
+COMMIT=$1
+
+# Confirm the commit hash is valid
+git rev-parse --quiet --verify ${COMMIT} > /dev/null
+if [ $? != "0" ]; then
+    echo "${COMMIT} is not a valid git object"
+    exit 1
+fi
+
+FILES_LIST=(`git diff-tree --no-commit-id --name-only -r ${COMMIT}`)
+
+# echo "Commit ${COMMIT} modifies ${#FILES_LIST[@]} files:"
+echo "Patch files for commit '${COMMIT}':"
+for (( i=0; i<${#FILES_LIST[@]}; ++i ))
+do
+    FULL_FILE_PATH=${FILES_LIST[$i]}
+
+    if [ ! -e ${FULL_FILE_PATH} ]
+    then
+        echo -e "    \e[33m'\e[34m${FULL_FILE_PATH}\e[33m' is not accessible from current commit. Skipping.\e[0m"
+        continue
+    fi
+
+    FILE_WITH_UNDERSCORES=$(echo ${FULL_FILE_PATH} | tr '/' '_')
+    PATCH_FILE_NAME="${FILE_WITH_UNDERSCORES}.patch"
+
+    ORIG_PATCH_FILE=$(git format-patch -1 ${COMMIT} ${FULL_FILE_PATH})
+    mv ${ORIG_PATCH_FILE} ${PATCH_FILE_NAME}
+    echo "    ${PATCH_FILE_NAME}"
+done
+
+exit 0
