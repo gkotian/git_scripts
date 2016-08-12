@@ -19,7 +19,7 @@ if [ $NUM_MODIFIED_FILES != "0" ]; then
     exit 1
 fi
 
-echo -n "Onto where: "
+echo -n "Onto where (commit/branch): "
 read COMMIT_TARGET
 
 echo -n "Branch to move: "
