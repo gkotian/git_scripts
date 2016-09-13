@@ -38,13 +38,6 @@ if [ $RC != "0" ]; then
     exit $RC
 fi
 
-# Make sure there are no modified files (just erring on the side of caution)
-NUM_MODIFIED_FILES=$(git diff --name-only | wc -l)
-if [ $NUM_MODIFIED_FILES -ne 0 ]; then
-    echo "Modified files detected. Aborting."
-    exit 1
-fi
-
 git submodule foreach git remote update -p
 echo ""
 
