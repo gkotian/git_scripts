@@ -73,7 +73,6 @@ done
 
 echo ""
 echo "Congratulations! All tests passed!"
-echo ""
 
 git co ${BRANCH_NAME} >/dev/null 2>&1
 git submodule update >/dev/null
