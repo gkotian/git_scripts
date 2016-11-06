@@ -22,10 +22,15 @@ shortlog = git('shortlog', '-s', '-n', '--no-merges').replace('\t', ' ').split('
 # (in order to set the width of the first column to display)
 longest_name_len = 0
 for entry in shortlog:
-    cur_name_len = len(entry.lstrip().split(' ', 1)[1])
+    name = entry.lstrip().split(' ', 1)[1]
 
-    if cur_name_len > longest_name_len:
-        longest_name_len = cur_name_len
+    # Names often contain unicode characters, so we need to decode them first
+    u_name = name.decode('utf-8')
+
+    name_len = len(u_name)
+
+    if name_len > longest_name_len:
+        longest_name_len = name_len
 
 # Write the header
 print ("Name".center(longest_name_len) + "    " + "Commits".center(7) + "    " +
@@ -46,6 +51,7 @@ for entry in shortlog:
         total_additions += int(num_additions)
         total_deletions += int(num_deletions)
 
-    print (name.ljust(longest_name_len) + "    " + num_commits.rjust(6) +
+    u_name = name.decode('utf-8')
+    print (u_name.ljust(longest_name_len) + "    " + num_commits.rjust(6) +
         "    " + str(total_additions).rjust(9) + "    " +
         str(total_deletions).rjust(11))
