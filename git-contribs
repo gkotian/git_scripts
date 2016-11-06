@@ -3,6 +3,13 @@
 
 import subprocess
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 # Function to run a git command
 def git(*args, **kwargs):
     args = list(args)
@@ -48,8 +55,12 @@ for entry in shortlog:
 
     for stats_entry in stats_entries:
         num_additions, num_deletions, file_name = stats_entry.split('\t')
-        total_additions += int(num_additions)
-        total_deletions += int(num_deletions)
+
+        if is_number(num_additions):
+            total_additions += int(num_additions)
+
+        if is_number(num_deletions):
+            total_deletions += int(num_deletions)
 
     u_name = name.decode('utf-8')
     print (u_name.ljust(longest_name_len) + "    " + num_commits.rjust(6) +
