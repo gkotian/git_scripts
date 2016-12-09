@@ -49,8 +49,7 @@ if [ -z "$COMMIT_HASH2" ]; then
     exit 3
 fi
 
-git co -B $BRANCH1 $COMMIT_HASH2 >/dev/null 2>&1
-git co -B $BRANCH2 $COMMIT_HASH1 >/dev/null 2>&1
+git checkout -B $BRANCH1 $COMMIT_HASH2 >/dev/null 2>&1
+git checkout -B $BRANCH2 $COMMIT_HASH1 >/dev/null 2>&1
 
 echo "Swapped branches '$BRANCH1' & '$BRANCH2'"
-
