@@ -75,7 +75,7 @@ for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
     FILE_FULL_PATH=$(readlink -m ${FILES_LIST[$i]})
 
-    cp $FILE_FULL_PATH $TMPDIR
+    cp --preserve=all $FILE_FULL_PATH $TMPDIR
 
     FILENAME=$(basename $FILE_FULL_PATH)
 
