@@ -42,6 +42,7 @@ if [ $# -eq 0 ]; then
     FILES_LIST=(`git diff --name-only`)
 else
     FILES_LIST=("$@")
+    WORKING_DIRECTORY=${GIT_PREFIX} # directory name where git alias called, empty if run from git root
 fi
 
 # Get a diff tool to be used
@@ -73,7 +74,7 @@ TMPDIR=$(mktemp -d)
 # For each file in the files list
 for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
-    FILE_FULL_PATH=$(readlink -m ${FILES_LIST[$i]})
+    FILE_FULL_PATH=$(readlink -m ${WORKING_DIRECTORY}${FILES_LIST[$i]})
 
     cp $FILE_FULL_PATH $TMPDIR
 
