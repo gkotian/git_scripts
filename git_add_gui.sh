@@ -74,6 +74,7 @@ TMPDIR=$(mktemp -d)
 for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
     FILE_FULL_PATH=$(readlink -m ${FILES_LIST[$i]})
+    WORK_TREE_VERSION_FILEMODES=$(stat -c "%a" "${FILE_FULL_PATH}")
 
     cp --preserve=all $FILE_FULL_PATH $TMPDIR
 
@@ -89,6 +90,7 @@ do
     # string of alphanumeric characters.
     TEMP_FILE=$(git checkout-index --temp $FILE_FULL_PATH | cut -f1)
     INDEX_VERSION=$GIT_TOP/$TEMP_FILE
+    $(chmod "${WORK_TREE_VERSION_FILEMODES}" "${INDEX_VERSION}")
 
     # Launch the difftool to compare the work tree version and the index version
     # Bring in whatever changes are to be staged into the index version
