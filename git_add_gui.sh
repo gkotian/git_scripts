@@ -57,11 +57,17 @@ else
     # If the user is giving the list of files, then we assume that the paths
     # are correct, and simply construct the absolute paths using 'readlink -m'
     # on whatever was given.
+    # Note that if the script was launched using a git alias to a shell command,
+    # then the command will always be executed from the top-level directory and
+    # 'GIT_PREFIX' will be set as appropriate. So if 'GIT_PREFIX' is non-null,
+    # we need to prefix it to all the given file names.
+    PREFIX=${GIT_PREFIX:-.}
+
     FILES_LIST_TMP=("$@")
 
     for (( i=0; i<${#FILES_LIST_TMP[@]}; ++i ))
     do
-        FILE_FULL_PATH="$(readlink -m ${FILES_LIST_TMP[$i]})"
+        FILE_FULL_PATH="$(readlink -m ${PREFIX}/${FILES_LIST_TMP[$i]})"
         FILES_LIST+=("${FILE_FULL_PATH}")
     done
 fi
