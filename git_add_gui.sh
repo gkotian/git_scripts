@@ -54,9 +54,14 @@ if [ $# -eq 0 ]; then
         FILES_LIST+=("${FILE_FULL_PATH}")
     done
 else
-    # If the user is giving the list of files, then we assume that the paths
-    # are correct, and simply construct the absolute paths using 'readlink -m'
-    # on whatever was given.
+    # The user has entered a list of files. Confirm they are all valid.
+    git ls-files $@ >/dev/null
+    RC=$?
+    if [ $RC != "0" ]; then
+        exit $RC
+    fi
+
+    # Construct the absolute paths of the given files using 'readlink -m'.
     # Note that if the script was launched using a git alias to a shell command,
     # then the command will always be executed from the top-level directory and
     # 'GIT_PREFIX' will be set as appropriate. So if 'GIT_PREFIX' is non-null,
