@@ -36,12 +36,45 @@ if [ $NUM_MODIFIED_FILES == "0" ]; then
     exit 1
 fi
 
-# Get the list of files to work upon. All modified files if no files were
-# explicitly given on the command line.
+# Declare an empty array to be filled with the list of files to work upon. This
+# array will only contain absolute file paths. If no files were explicitly given
+# on the command line, then all modified files in the repo will be considered.
+FILES_LIST=()
+
 if [ $# -eq 0 ]; then
-    FILES_LIST=(`git diff --name-only`)
+    # 'git diff --name-only' returns file names as seen from the top-level of
+    # the git repository (even if it is run from a nested sub-directory of the
+    # repo). In order to get correct absolute paths of the modified files, we
+    # need to prefix 'GIT_TOP'.
+    FILES_LIST_TMP=(`git diff --name-only`)
+
+    for (( i=0; i<${#FILES_LIST_TMP[@]}; ++i ))
+    do
+        FILE_FULL_PATH="${GIT_TOP}/${FILES_LIST_TMP[$i]}"
+        FILES_LIST+=("${FILE_FULL_PATH}")
+    done
 else
-    FILES_LIST=("$@")
+    # The user has entered a list of files. Confirm they are all valid.
+    git ls-files $@ >/dev/null
+    RC=$?
+    if [ $RC != "0" ]; then
+        exit $RC
+    fi
+
+    # Construct the absolute paths of the given files using 'readlink -m'.
+    # Note that if the script was launched using a git alias to a shell command,
+    # then the command will always be executed from the top-level directory and
+    # 'GIT_PREFIX' will be set as appropriate. So if 'GIT_PREFIX' is non-null,
+    # we need to prefix it to all the given file names.
+    PREFIX=${GIT_PREFIX:-.}
+
+    FILES_LIST_TMP=("$@")
+
+    for (( i=0; i<${#FILES_LIST_TMP[@]}; ++i ))
+    do
+        FILE_FULL_PATH="$(readlink -m ${PREFIX}/${FILES_LIST_TMP[$i]})"
+        FILES_LIST+=("${FILE_FULL_PATH}")
+    done
 fi
 
 # Get a diff tool to be used
@@ -73,12 +106,11 @@ TMPDIR=$(mktemp -d)
 # For each file in the files list
 for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
-    FILE_FULL_PATH=$(readlink -m ${FILES_LIST[$i]})
-    WORK_TREE_VERSION_FILEMODES=$(stat -c "%a" "${FILE_FULL_PATH}")
+    WORK_TREE_VERSION_FILEMODES=$(stat -c "%a" "${FILES_LIST[$i]}")
 
-    cp --preserve=all $FILE_FULL_PATH $TMPDIR
+    cp --preserve=all ${FILES_LIST[$i]} $TMPDIR
 
-    FILENAME=$(basename $FILE_FULL_PATH)
+    FILENAME=$(basename ${FILES_LIST[$i]})
 
     # This has your changes in it
     WORK_TREE_VERSION=$TMPDIR/$FILENAME
@@ -88,7 +120,7 @@ do
     # be created in the top git directory (even if the command is run from deep
     # inside the git hierarchy). The 'xxxxxx' part in the file name is a random
     # string of alphanumeric characters.
-    TEMP_FILE=$(git checkout-index --temp $FILE_FULL_PATH | cut -f1)
+    TEMP_FILE=$(git checkout-index --temp ${FILES_LIST[$i]} | cut -f1)
     INDEX_VERSION=$GIT_TOP/$TEMP_FILE
     $(chmod "${WORK_TREE_VERSION_FILEMODES}" "${INDEX_VERSION}")
 
@@ -98,16 +130,16 @@ do
     $DIFF_TOOL $WORK_TREE_VERSION $INDEX_VERSION
 
     # Temporarily save the file containing all modified changes
-    mv $FILE_FULL_PATH $WORK_TREE_VERSION
+    mv ${FILES_LIST[$i]} $WORK_TREE_VERSION
 
     # Put the file containing only the changes to be staged into its rightful
     # location, so that we can run 'git add' on it
-    mv $INDEX_VERSION $FILE_FULL_PATH
-    git add $FILE_FULL_PATH
+    mv $INDEX_VERSION ${FILES_LIST[$i]}
+    git add ${FILES_LIST[$i]}
 
     # Restore the temporarily saved file, so that the unstaged changes are not
     # lost
-    mv $WORK_TREE_VERSION $FILE_FULL_PATH
+    mv $WORK_TREE_VERSION ${FILES_LIST[$i]}
 
     # Instead of swapping files in the above few commands, we could also
     # calculate the diff and apply it directly to the index as follows, but I
