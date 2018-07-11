@@ -21,14 +21,16 @@ fi
 
 # Confirm correct number of arguments
 if [ $# -ne 1 ]; then
-    echo "Only a single argument (the commit hash) is allowed"
+    echo "Incorrect number of arguments."
+    echo "Usage:"
+    echo "    $> git patches <commit-hash>"
     exit 1
 fi
 
 COMMIT=$1
 
 # Confirm the commit hash is valid
-git rev-parse --quiet --verify ${COMMIT} > /dev/null
+SHORT_HASH=$(git rev-parse --quiet --verify --short ${COMMIT})
 if [ $? != "0" ]; then
     echo "${COMMIT} is not a valid git object"
     exit 1
@@ -36,24 +38,33 @@ fi
 
 FILES_LIST=(`git diff-tree --no-commit-id --name-only -r ${COMMIT}`)
 
-# echo "Commit ${COMMIT} modifies ${#FILES_LIST[@]} files:"
-echo "Patch files for commit '${COMMIT}':"
+PATCH_FILES_DIR="/tmp/${SHORT_HASH}_patches"
+
+if [ -e "${PATCH_FILES_DIR}" ]
+then
+    echo "Patch files directory '${PATCH_FILES_DIR}' already exists. Aborting."
+    exit 2
+else
+    mkdir ${PATCH_FILES_DIR}
+fi
+
+NUM_PATCH_FILES=0
 for (( i=0; i<${#FILES_LIST[@]}; ++i ))
 do
     FULL_FILE_PATH=${FILES_LIST[$i]}
 
     if [ ! -e ${FULL_FILE_PATH} ]
     then
-        echo -e "    \e[33m'\e[34m${FULL_FILE_PATH}\e[33m' is not accessible from current commit. Skipping.\e[0m"
+        echo -e "\e[33m'\e[34m${FULL_FILE_PATH}\e[33m' is not accessible from current commit. Skipping.\e[0m"
         continue
     fi
 
-    FILE_WITH_UNDERSCORES=$(echo ${FULL_FILE_PATH} | tr '/' '_')
+    FILE_WITH_UNDERSCORES=$(echo ${FULL_FILE_PATH} | sed 's/\//__/g')
     PATCH_FILE_NAME="${FILE_WITH_UNDERSCORES}.patch"
 
     ORIG_PATCH_FILE=$(git format-patch -1 ${COMMIT} ${FULL_FILE_PATH})
-    mv ${ORIG_PATCH_FILE} ${PATCH_FILE_NAME}
-    echo "    ${PATCH_FILE_NAME}"
+    mv "${ORIG_PATCH_FILE}" "${PATCH_FILES_DIR}/${PATCH_FILE_NAME}"
+    NUM_PATCH_FILES=$(expr ${NUM_PATCH_FILES} + 1)
 done
 
-exit 0
+echo "$NUM_PATCH_FILES patch files saved to '${PATCH_FILES_DIR}'"
