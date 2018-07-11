@@ -35,6 +35,7 @@ fi
 echo -n "Starting commit (which should *not* be onto'ed): "
 read COMMIT_SRC_BOTTOM
 
-git rebase --onto ${COMMIT_TARGET} ${COMMIT_SRC_BOTTOM} ${BRANCH_SRC_TOP}
+AUTHOR_EMAIL=$(git config user.email)
+git rebase --gpg-sign=${AUTHOR_EMAIL} --onto ${COMMIT_TARGET} ${COMMIT_SRC_BOTTOM} ${BRANCH_SRC_TOP}
 
 echo "Branch '${BRANCH_SRC_TOP}' moved (was earlier at '${COMMIT_SRC_TOP}')"
