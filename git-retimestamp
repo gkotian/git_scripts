@@ -1,0 +1,162 @@
+#!/usr/bin/env python
+
+################################################################################
+#
+#   Description:
+#   ------------
+#       Resets the timestamps of all commits in the currently checked out branch
+#       to the current time.
+#
+#       The only reason you'd want to do this is to ensure that GitHub displays
+#       the commits in pull requests in the correct order (i.e. according to the
+#       parent-child relationship of the commits and not according to the time
+#       when a commit was originally made). As such, this is only relevant to
+#       code that is hosted on GitHub. Moreover, this script would become
+#       obsolete if GitHub one day stops making nonsensical statements about
+#       git rebases altering the space-time continuum and instead just fixes its
+#       code. For more information, refer to:
+#       https://help.github.com/articles/why-are-my-commits-in-the-wrong-order/
+#
+#   Usage:
+#   ------
+#   (first place this script in one of the directories in $PATH)
+#       $> cd path/to/your/repo
+#       $> git retimestamp
+#
+################################################################################
+
+import argparse
+import git
+import sys
+
+
+################################################################################
+#
+#   Prints an error message and exits with an error status code
+#
+#   Params:
+#       msg = message to be printed before exiting
+#
+################################################################################
+
+def die(msg):
+    print msg
+    sys.exit(1)
+
+
+################################################################################
+#
+#   Displays a list of commits that will be re-timestamped, so that the user can
+#   confirm that the correct commits will be targeted
+#
+#   Params:
+#       base = the base of the branch
+#       branch_name = the name of the branch
+#
+#   Returns:
+#       the number of commits in the branch, relative to the base of the branch
+#
+################################################################################
+
+def display_commits_list(base, branch_name):
+    commits_list = git.get_commits_list(base, branch_name)
+
+    # Show the user how many (and which) commits will be modified
+    num_commits = len(commits_list)
+
+    if num_commits == 1:
+        print "The timestamps of the following commit will be reset to the current time:"
+    else:
+        print "The timestamps of the following {} commits will be reset to the current time:".format(num_commits)
+
+    commit_num = 0
+    if num_commits > 9:
+        # Show only the top and bottom 3 commits
+        for commit in commits_list[0:3]:
+            commit_num += 1
+            commit_hash, commit_title = commit.split(' ', 1)
+            sys.stdout.write('    ' + str(commit_num) + '. (\033[34m' +
+                commit_hash + '\033[0m) ' + commit_title)
+
+            if commit_num == 1:
+                sys.stdout.write("    \033[32m<-- old HEAD of '" + branch_name +
+                    "'\033[0m\n")
+            else:
+                sys.stdout.write('\n')
+
+        print "    ..."
+        print "    ... << {} more commits >> ...".format(num_commits - 6)
+        print "    ..."
+
+        commit_num = num_commits - 3
+        for commit in commits_list[-3:]:
+            commit_num += 1
+            commit_hash, commit_title = commit.split(' ', 1)
+            sys.stdout.write('    ' + str(commit_num) + '. (\033[34m' +
+                commit_hash + '\033[0m) ' + commit_title + '\n')
+    else:
+        # Show all commits
+        for commit in commits_list:
+            commit_num += 1
+            commit_hash, commit_title = commit.split(' ', 1)
+            sys.stdout.write('    ' + str(commit_num) + '. (\033[34m' +
+                commit_hash + '\033[0m) ' + commit_title)
+
+            if commit_num == 1:
+                sys.stdout.write("    \033[32m<-- old HEAD of '" + branch_name +
+                    "'\033[0m\n")
+            else:
+                sys.stdout.write('\n')
+
+    return num_commits
+
+# Set up command line arguments
+parser = argparse.ArgumentParser(usage='%(prog)s [ARGUMENTS]',
+    description='Set timestamps of all commits in a branch to the current time')
+parser.add_argument('-b', '--base', default='upstream/master',
+    help='branch (or git ref) to use as the base of the branch '
+        "(defaults to 'upstream/master')")
+args = vars(parser.parse_args())
+
+if not git.in_repo():
+    die("Not a git repository. Aborting")
+
+if not git.is_valid_commit(args['base']):
+    die("Invalid base '{}'. Aborting.".format(args['base']))
+
+branch_name = git.get_current_branch()
+if not branch_name:
+    die("No branch is currently checked out. Aborting.")
+
+num_commits = display_commits_list(args['base'], branch_name)
+
+# Ask for confirmation
+proceed = raw_input("Proceed (y/n)? ")
+if proceed != 'y' and proceed != 'Y':
+    die("Aborting.")
+
+if git.is_gpg_signing_enabled():
+    author_email = git.get_user_email()
+    if not author_email:
+        die("Failed to get the author email address. Aborting.")
+
+    gpg_sign_argument = '--gpg-sign=' + author_email
+else:
+    gpg_sign_argument = ''
+
+commits_range_argument = 'HEAD~' + str(num_commits)
+
+# Perform the actual resetting of the timestamps
+try:
+    if gpg_sign_argument:
+        git.run_command('rebase', '--ignore-date', gpg_sign_argument,
+            commits_range_argument)
+    else:
+        git.run_command('rebase', '--ignore-date', commits_range_argument)
+except git.GitException as e:
+    print "Git command '{}' failed with the following error:".format(e.args[0])
+    die(e.args[1].rstrip('\n'))
+
+print "Re-timestamp complete."
+
+# vim: set tw=80 :
