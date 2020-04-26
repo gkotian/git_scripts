@@ -19,8 +19,8 @@ def git(*args, **kwargs):
     proc = subprocess.Popen(args, **kwargs)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
-        print "git command failed"
-    return stdout.rstrip('\n')
+        print("git command failed")
+    return stdout.decode('utf-8').rstrip('\n')
 
 # Get the names of all authors along with their respective commit counts
 shortlog = git('shortlog', '-s', '-n', '--no-merges').replace('\t', ' ').split('\n')
@@ -31,16 +31,13 @@ longest_name_len = 0
 for entry in shortlog:
     name = entry.lstrip().split(' ', 1)[1]
 
-    # Names often contain unicode characters, so we need to decode them first
-    u_name = name.decode('utf-8')
-
-    name_len = len(u_name)
+    name_len = len(name)
 
     if name_len > longest_name_len:
         longest_name_len = name_len
 
 # Write the header
-print ("Name".center(longest_name_len) + "    " + "Commits".center(7) + "    " +
+print("Name".center(longest_name_len) + "    " + "Commits".center(7) + "    " +
     "Lines Added".center(11) + "    " + "Lines Deleted".center(13))
 
 # Write each author's statistics
@@ -62,7 +59,6 @@ for entry in shortlog:
         if is_number(num_deletions):
             total_deletions += int(num_deletions)
 
-    u_name = name.decode('utf-8')
-    print (u_name.ljust(longest_name_len) + "    " + num_commits.rjust(6) +
+    print(name.ljust(longest_name_len) + "    " + num_commits.rjust(6) +
         "    " + str(total_additions).rjust(9) + "    " +
         str(total_deletions).rjust(11))
