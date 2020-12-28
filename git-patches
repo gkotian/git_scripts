@@ -75,4 +75,6 @@ do
     NUM_PATCH_FILES=$(expr ${NUM_PATCH_FILES} + 1)
 done
 
-echo "$NUM_PATCH_FILES patch files saved to '${PATCH_FILES_DIR}'"
+echo "Saved ${NUM_PATCH_FILES} patch files"
+echo "To apply them selectively, use:"
+echo "    git apply-from-dir ${PATCH_FILES_DIR}"
