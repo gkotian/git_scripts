@@ -62,6 +62,14 @@ do
     FILE_WITH_UNDERSCORES=$(echo ${FULL_FILE_PATH} | sed 's/\//__/g')
     PATCH_FILE_NAME="${FILE_WITH_UNDERSCORES}.patch"
 
+    # If the patch file name starts with a period, then replace the leading '.'
+    # with 'dot__'. Otherwise, the generated patch file will be hidden, and
+    # would therefore be susceptible to being overlooked.
+    if [[ "${PATCH_FILE_NAME}" == .* ]]
+    then
+        PATCH_FILE_NAME=${PATCH_FILE_NAME/./"dot__"}
+    fi
+
     ORIG_PATCH_FILE=$(git format-patch -1 ${COMMIT} ${FULL_FILE_PATH})
     mv "${ORIG_PATCH_FILE}" "${PATCH_FILES_DIR}/${PATCH_FILE_NAME}"
     NUM_PATCH_FILES=$(expr ${NUM_PATCH_FILES} + 1)
