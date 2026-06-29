@@ -36,6 +36,8 @@ if [ $? != "0" ]; then
     exit 1
 fi
 
+cd ${GIT_TOP}
+
 FILES_LIST=(`git diff-tree --no-commit-id --name-only -r ${COMMIT}`)
 
 PATCH_FILES_DIR="/tmp/${SHORT_HASH}_patches"
@@ -75,6 +77,11 @@ do
     NUM_PATCH_FILES=$(expr ${NUM_PATCH_FILES} + 1)
 done
 
+APPLY_CMD="git apply-from-dir ${PATCH_FILES_DIR}"
+
 echo "Saved ${NUM_PATCH_FILES} patch files"
 echo "To apply them selectively, use:"
-echo "    git apply-from-dir ${PATCH_FILES_DIR}"
+echo "    ${APPLY_CMD}"
+
+echo -n "${APPLY_CMD}" | xclip -in -selection clipboard
+echo "(this command has already been copied to the clipboard)"
